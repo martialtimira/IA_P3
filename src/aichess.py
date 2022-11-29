@@ -49,6 +49,8 @@ class Aichess():
         self.currentStateW = self.chess.boardSim.currentStateW;
         self.depthMax = 8;
         self.checkMate = False
+        self.stateDict = {}
+        self.actionDict = {}
 
     def getCurrentState(self):
 
@@ -98,7 +100,17 @@ class Aichess():
             return False
 
     def isCheckMate(self, mystate):
-        return False
+        checkMateStates = [[[0, 0, 2], [2, 4, 6]], [[0, 1, 2], [2, 4, 6]], [[0, 2, 2], [2, 4, 6]],
+                           [[0, 6, 2], [2, 4, 6]], [[0, 7, 2], [2, 4, 6]]];
+        perm_state = list(permutations(mystate))
+
+        for j in range(len(perm_state)):
+            for k in range(len(checkMateStates)):
+
+                if self.isSameState(list(perm_state[j]), checkMateStates[k]):
+                    self.checkMate = True
+
+            return self.checkMate
         
         
 
@@ -159,8 +171,6 @@ if __name__ == "__main__":
     # aichess.chess.boardSim.listVisitedStates = []
     # find the shortest path, initial depth 0
     depth = 0
-    #aichess.BreadthFirstSearch(currentState)
-    #aichess.DepthFirstSearch(currentState, depth)
 
     # MovesToMake = ['1e','2e','2e','3e','3e','4d','4d','3c']
 
@@ -183,3 +193,4 @@ if __name__ == "__main__":
     print("#Move sequence...  ", aichess.pathToTarget)
     print("#Visited sequence...  ", aichess.listVisitedStates)
     print("#Current State...  ", aichess.chess.board.currentStateW)
+    print("IsCheckMate: ", aichess.isCheckMate(aichess.chess.board.currentStateW))
