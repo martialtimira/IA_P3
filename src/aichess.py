@@ -6,6 +6,7 @@ Created on Thu Sep  8 11:22:03 2022
 @author: ignasi
 """
 import copy
+import csv
 
 import chess
 import numpy as np
@@ -208,6 +209,9 @@ if __name__ == "__main__":
     #     aichess.chess.moveSim(start, to)
 
     # aichess.chess.boardSim.print_board()
+    state_dict = aichess.state_dict()
+    print("Allstates: ", len(state_dict))
+    print("Index of state [[6, 0, 2], [6, 5, 6]]: ", state_dict[repr([[6, 0, 2], [6, 5, 6]])])
     print("#Move sequence...  ", aichess.pathToTarget)
     print("#Visited sequence...  ", aichess.listVisitedStates)
     print("#Current State...  ", aichess.chess.board.currentStateW)
