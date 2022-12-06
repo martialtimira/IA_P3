@@ -111,8 +111,26 @@ class Aichess():
                     self.checkMate = True
 
             return self.checkMate
-        
-        
+
+    def state_dict(self):
+        # El csv nomes conte les poscicions de les peces, no el tipus de peça.
+        # Les dues primeres columnes son la torra i les dues segones el rei
+
+        with open('Estats_IA_P3.csv', mode='r') as file:
+            csvFile = csv.reader(file)
+
+            states = []  # Matriu amb els estats
+
+            for line in csvFile:
+                states.append([int(x) for x in line])
+
+            estats = {}
+
+            for s in range(len(states)):
+                estats.update({repr([[states[s][0], states[s][1], 2], [states[s][2], states[s][3], 6]]): s})
+
+        return estats
+
 
 def translate(s):
     """
