@@ -113,6 +113,31 @@ class Aichess():
 
             return self.checkMate
 
+    def getMoveFromStates(self, currentState, nextState):
+        """
+        Returns the "start" and "to" points of a move from its 2 states
+        Args:
+            currentState: Current State of the board
+            nextState: State of the Board after the move
+
+        Returns: Starting coordinates, To coordinates, piece ID
+
+        """
+        start = None
+        to = None
+        piece = None
+
+        for element in currentState:                    #compare each element of both states, to find the one in the current state that isn't
+            if element not in nextState:                #on the next state, and define that one as the starting point, also define which piece it is
+                start = (element[0], element[1])
+                piece = element[2]
+        for element in nextState:                       #repeat, but instead find the one in nextState that isn't in currentState, and
+            if element not in currentState:             #define that one as the "to" point.
+                to = (element[0], element[1])
+
+
+        return start, to, piece
+
     def state_dict(self):
         # El csv nomes conte les poscicions de les peces, no el tipus de peça.
         # Les dues primeres columnes son la torra i les dues segones el rei
@@ -129,7 +154,7 @@ class Aichess():
 
             for s in range(len(states)):
                 estats.update({repr([[states[s][0], states[s][1], 2], [states[s][2], states[s][3], 6]]): s})
-
+        self.stateDict = estats
         return estats
 
 
