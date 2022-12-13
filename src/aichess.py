@@ -7,6 +7,7 @@ Created on Thu Sep  8 11:22:03 2022
 """
 import copy
 import csv
+import random
 
 import chess
 import numpy as np
@@ -144,11 +145,11 @@ class Aichess():
         '''
         Returns an index for the action recieved
         Args:
-            start:
-            to:
-            piece:
+            start: Starting position of the piece to move
+            to:    Ending position of the piece to move
+            piece: Piece to move
 
-        Returns:
+        Returns:  Index of the piece in the table
 
         '''
         diffY = start[0] - to[0]
@@ -234,6 +235,17 @@ class Aichess():
                 return 35
         return None
     def getActionFromIndex(self, index):
+        '''
+
+        Args:
+            index: index of the action in the Table
+
+        Returns:
+            diffY: the deviation on the Y coordinates from the current state
+            diffX: the deviation on the X coordinate from the current state
+            piece: the piece to move on the current state
+
+        '''
         diffY = None
         diffX = None
         piece = None
@@ -442,9 +454,8 @@ if __name__ == "__main__":
     # # black pieces
     # TA[0][4] = 12
 
-    TA[0][0] = 2
-    #TA[7][4] = 6
-    TA[3][4] = 6
+    TA[7][0] = 2
+    TA[7][4] = 6
     TA[0][4] = 12
 
     # initialise board
@@ -495,18 +506,52 @@ if __name__ == "__main__":
     aichess.rewardTable = rewardTable
     aichess.stateDict = state_dict
     print("Allstates: ", len(state_dict))
-    start, to, piece = aichess.getMoveFromStates(aichess.getCurrentState(), [[0, 0,2], [2,4,6]])
-    actionIndex = aichess.getIndexFromAction(start, to, piece)
     currentState = aichess.getCurrentState()
     currentState.sort(key=lambda x: x[2])
     print("CS: ", currentState)
-    stateIndex = aichess.stateDict[repr(currentState)]
-    print("AIndex: ", actionIndex, "SIndex: ", stateIndex)
-    print("Reward for those indexes: ", aichess.rewardTable[stateIndex][actionIndex])
-    aichess.chess.moveSim(start, to)
+    epsilon = 0.1
+    alpha = 0.1
+    gamma = 0.6
+    print()
+    while not aichess.isCheckMate(aichess.chess.boardSim.currentStateW):
+        currentState = aichess.getCurrentState()
+        currentState.sort(key=lambda x: x[2])
+        currentState_index = state_dict[repr(currentState)]
+        if random.uniform(0, 1) < epsilon:
+            actionIndex = random.randint(0, 35)
+        else:
+            actionIndex = np.argmax(qTable[currentState_index])
+        difY, difX, pieceToMove = aichess.getActionFromIndex(actionIndex)
+        nextState = []
+        for element in currentState:
+            if element[2] == pieceToMove:
+                newElement = [element[0] + difY, element[1] + difX, pieceToMove]
+                nextState.append(newElement)
+            else:
+                nextState.append(element)
+
+        start, to, piece = aichess.getMoveFromStates(currentState, nextState)
+        piece_there = aichess.chess.boardSim.board[start[0]][start[1]]
+        if not (to[0] > 7 or to[0] < 0 or to[1] > 7 or to[1] < 0) and to != (0, 4):
+            if piece_there != None:
+                if piece_there.is_valid_move(aichess.chess.boardSim, start, to):
+                    aichess.chess.moveSim(start, to)
+        nextState = aichess.getCurrentState()
+        nextState.sort(key=lambda x: x[2])
+        reward = rewardTable[currentState_index][actionIndex]
+
+        old_value = qTable[currentState_index][actionIndex]
+
+        next_state_index = state_dict[repr(nextState)]
+        next_max = np.max(qTable[next_state_index])
+
+        new_value = (1 - alpha) * old_value + alpha * (reward + gamma * next_max)
+        qTable[currentState_index][actionIndex] = new_value
+        aichess.chess.boardSim.print_board()
+
     aichess.chess.boardSim.print_board()
-    print("Action to make: ", start, to, piece)
-    print("Index of action: ", aichess.getIndexFromAction(start, to, piece))
+
+    print(qTable)
     print("#Move sequence...  ", aichess.pathToTarget)
     print("#Visited sequence...  ", aichess.listVisitedStates)
     print("#Current State...  ", aichess.chess.board.currentStateW)
