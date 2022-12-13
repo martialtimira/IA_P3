@@ -234,54 +234,56 @@ class Aichess():
                 return 35
         return None
 
-    def state_dict(self):
-        # El csv nomes conte les poscicions de les peces, no el tipus de peça.
-        # Les dues primeres columnes son la torra i les dues segones el rei
+def init_state_dict():
+    # El csv nomes conte les poscicions de les peces, no el tipus de peça.
+    # Les dues primeres columnes son la torra i les dues segones el rei
 
-        with open('Estats_IA_P3.csv', mode='r') as file:
-            csvFile = csv.reader(file)
+    with open('Estats_IA_P3.csv', mode='r') as file:
+        csvFile = csv.reader(file)
 
-            states = []  # Matriu amb els estats
+        states = []  # Matriu amb els estats
 
-            for line in csvFile:
-                states.append([int(x) for x in line])
+        for line in csvFile:
+            states.append([int(x) for x in line])
 
-            estats = {}
+        estats = {}
 
-            for s in range(len(states)):
-                estats.update({repr([[states[s][0], states[s][1], 2], [states[s][2], states[s][3], 6]]): s})
-        self.stateDict = estats
-        return estats
+        for s in range(len(states)):
+            estats.update({repr([[states[s][0], states[s][1], 2], [states[s][2], states[s][3], 6]]): s})
+    return estats
 
-    def init_tables(self):
-        self.qTable = np.zeros((len(self.stateDict), 36))
-        self.rewardTable = np.full((len(self.stateDict), 36), -1)
+def init_tables(stateDict):
+    qTable = np.zeros((len(stateDict), 36))
+    rewardTable = np.full((len(stateDict), 36), -1)
 
-        #Set reward of all the tower actions that end in CheckMate to 100
-        rook_check_mate_columns = [0, 1, 2, 6, 7]
-        for column in rook_check_mate_columns:
-            for row in range(7, 0, -1):
-                currentState = [[row, column, 2], [2, 4, 6]]
-                checkMateState = [[0, column, 2], [2, 4, 6]]
-                start, to, piece = aichess.getMoveFromStates(currentState, checkMateState)
-                actionIndex = aichess.getIndexFromAction(start, to, piece)
-                stateIndex = aichess.stateDict[repr(currentState)]
-                self.rewardTable[stateIndex][actionIndex] = 100
+    #Set reward of all the tower actions that end in CheckMate to 100
+    rook_check_mate_columns = [0, 1, 2, 6, 7]
+    for column in rook_check_mate_columns:
+        for row in range(7, 0, -1):
+            currentState = [[row, column, 2], [2, 4, 6]]
+            checkMateState = [[0, column, 2], [2, 4, 6]]
+            start, to, piece = aichess.getMoveFromStates(currentState, checkMateState)
+            actionIndex = aichess.getIndexFromAction(start, to, piece)
+            stateIndex = stateDict[repr(currentState)]
+            rewardTable[stateIndex][actionIndex] = 100
 
-            currentState_1 = [[0, column, 2], [2, 3, 6]]
-            currentState_2 = [[0, column, 2], [2, 5, 6]]
-            currentState_3 = [[0, column, 2], [3, 3, 6]]
-            currentState_4 = [[0, column, 2], [3, 4, 6]]
-            currentState_5 = [[0, column, 2], [3, 5, 6]]
-            checkMateStateK = [[0, column, 2], [2, 4, 6]]
+        #set reward of all the king actions that lead to CheckMate to 100
+        currentState_1 = [[0, column, 2], [2, 3, 6]]
+        currentState_2 = [[0, column, 2], [2, 5, 6]]
+        currentState_3 = [[0, column, 2], [3, 3, 6]]
+        currentState_4 = [[0, column, 2], [3, 4, 6]]
+        currentState_5 = [[0, column, 2], [3, 5, 6]]
+        checkMateStateK = [[0, column, 2], [2, 4, 6]]
 
-            king_states = [currentState_1, currentState_2, currentState_3, currentState_4, currentState_5]
+        king_states = [currentState_1, currentState_2, currentState_3, currentState_4, currentState_5]
 
-            for state in king_states:
-                start, to, piece = aichess.getMoveFromStates(state, checkMateStateK)
-                actionIndex = aichess.getIndexFromAction(start, to, piece)
-                stateIndex = aichess.stateDict[repr(state)]
-                self.rewardTable[stateIndex][actionIndex] = 100
+        for state in king_states:
+            start, to, piece = aichess.getMoveFromStates(state, checkMateStateK)
+            actionIndex = aichess.getIndexFromAction(start, to, piece)
+            stateIndex = stateDict[repr(state)]
+            rewardTable[stateIndex][actionIndex] = 100
+
+    return qTable, rewardTable
 
 
 
@@ -320,7 +322,7 @@ if __name__ == "__main__":
 
     TA[0][0] = 2
     #TA[7][4] = 6
-    TA[3][3] = 6
+    TA[3][4] = 6
     TA[0][4] = 12
 
     # initialise board
@@ -362,8 +364,14 @@ if __name__ == "__main__":
     #     aichess.chess.moveSim(start, to)
 
     # aichess.chess.boardSim.print_board()
-    state_dict = aichess.state_dict()
-    aichess.init_tables()
+    ##Initialize state dictionary, qTable and Reward Table, and assign them to aichess
+    state_dict = init_state_dict()
+    qTable, rewardTable =  init_tables(state_dict)
+
+    ##From here we can reinitialize Aichess and keep the data of QTable and rewardTable
+    aichess.qTable = qTable
+    aichess.rewardTable = rewardTable
+    aichess.stateDict = state_dict
     print("Allstates: ", len(state_dict))
     start, to, piece = aichess.getMoveFromStates(aichess.getCurrentState(), [[0, 0,2], [2,4,6]])
     actionIndex = aichess.getIndexFromAction(start, to, piece)
