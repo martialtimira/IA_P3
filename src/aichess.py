@@ -153,8 +153,6 @@ class Aichess():
         '''
         diffY = start[0] - to[0]
         diffX = start[1] - to[1]
-        print("Difference in the X axis: ", diffX)
-        print("Difference on the Y axis: ", diffY)
         if piece == 6:          ##King actions
             if diffY == 1 and diffX == 0:
                 return 0
@@ -259,6 +257,20 @@ class Aichess():
         self.qTable = np.zeros((len(self.stateDict), 36))
         self.rewardTable = np.full((len(self.stateDict), 36), -1)
 
+        #Set reward of all the tower actions that end in CheckMate to 100
+        rook_check_mate_columns = [0, 1, 2, 6, 7]
+        for column in rook_check_mate_columns:
+            for row in range(7, 0, -1):
+                currentState = [[row, column, 2], [2, 4, 6]]
+                checkMateState = [[0, column, 2], [2, 4, 6]]
+                start, to, piece = aichess.getMoveFromStates(currentState, checkMateState)
+                actionIndex = aichess.getIndexFromAction(start, to, piece)
+                stateIndex = aichess.stateDict[repr(currentState)]
+                self.rewardTable[stateIndex][actionIndex] = 100
+
+        #Set reward of all king actions that end in CheckMate to 100
+
+
 
 def translate(s):
     """
@@ -293,8 +305,9 @@ if __name__ == "__main__":
     # # black pieces
     # TA[0][4] = 12
 
-    TA[7][0] = 2
-    TA[7][4] = 6
+    TA[6][6] = 2
+    #TA[7][4] = 6
+    TA[2][4] = 6
     TA[0][4] = 12
 
     # initialise board
@@ -340,10 +353,19 @@ if __name__ == "__main__":
     aichess.init_tables()
     print("Allstates: ", len(state_dict))
     print("Index of state [[6, 0, 2], [6, 5, 6]]: ", state_dict[repr([[6, 0, 2], [6, 5, 6]])])
-    start, to, piece = aichess.getMoveFromStates(aichess.getCurrentState(), [[7,0,2], [7,5,6]])
+    start, to, piece = aichess.getMoveFromStates(aichess.getCurrentState(), [[0, 6,2], [2,4,6]])
+    actionIndex = aichess.getIndexFromAction(start, to, piece)
+    currentState = aichess.getCurrentState()
+    currentState.sort(key=lambda x: x[2])
+    print("CS: ", currentState)
+    stateIndex = aichess.stateDict[repr(currentState)]
+    print("AIndex: ", actionIndex, "SIndex: ", stateIndex)
+    print("Reward for those indexes: ", aichess.rewardTable[stateIndex][actionIndex])
+    aichess.chess.moveSim(start, to)
+    aichess.chess.boardSim.print_board()
     print("Action to make: ", start, to, piece)
     print("Index of action: ", aichess.getIndexFromAction(start, to, piece))
     print("#Move sequence...  ", aichess.pathToTarget)
     print("#Visited sequence...  ", aichess.listVisitedStates)
     print("#Current State...  ", aichess.chess.board.currentStateW)
-    print("IsCheckMate: ", aichess.isCheckMate(aichess.chess.board.currentStateW))
+    print("IsCheckMate: ", aichess.isCheckMate(aichess.chess.boardSim.currentStateW))
