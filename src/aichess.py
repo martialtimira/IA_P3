@@ -52,7 +52,8 @@ class Aichess():
         self.checkMate = False
         self.stateDict = {}
         self.actionDict = {}
-        self.qMatrix = []
+        self.qTable = []
+        self.rewardTable = []
 
     def getCurrentState(self):
 
@@ -254,8 +255,9 @@ class Aichess():
         self.stateDict = estats
         return estats
 
-    def initQMatrix(self):
-        self.qMatrix = np.zeros((len(self.stateDict), 36))
+    def init_tables(self):
+        self.qTable = np.zeros((len(self.stateDict), 36))
+        self.rewardTable = np.full((len(self.stateDict), 36), -1)
 
 
 def translate(s):
@@ -335,7 +337,7 @@ if __name__ == "__main__":
 
     # aichess.chess.boardSim.print_board()
     state_dict = aichess.state_dict()
-    aichess.initQMatrix()
+    aichess.init_tables()
     print("Allstates: ", len(state_dict))
     print("Index of state [[6, 0, 2], [6, 5, 6]]: ", state_dict[repr([[6, 0, 2], [6, 5, 6]])])
     start, to, piece = aichess.getMoveFromStates(aichess.getCurrentState(), [[7,0,2], [7,5,6]])
