@@ -55,7 +55,7 @@ class Aichess():
 
     def getCurrentState(self):
 
-        return self.myCurrentStateW
+        return self.chess.boardSim.currentStateW
 
     def getListNextStatesW(self, myState):
 
@@ -138,6 +138,43 @@ class Aichess():
 
         return start, to, piece
 
+    def getIndexFromAction(self, start, to, piece):
+        '''
+        Returns an index for the action recieved
+        Args:
+            start:
+            to:
+            piece:
+
+        Returns:
+
+        '''
+        diffY = start[0] - to[0]
+        diffX = start[1] - to[1]
+        print("Difference in the X axis: ", diffX)
+        print("Difference on the Y axis: ", diffY)
+        if piece == 6:
+            if diffY == 1 and diffX == 0:
+                return 0
+            if diffY == 1 and diffX == 1:
+                return 1
+            if diffY == 1 and diffX == -1:
+                return 2
+            if diffY == 0 and diffX == 1:
+                return 3
+            if diffY == 0 and diffX == -1:
+                return 4
+            if diffY == -1 and diffX == 0:
+                return 5
+            if diffY == -1 and diffX == 1:
+                return 6
+            if diffY == -1 and diffX == -1:
+                return 7
+            return 100
+        if piece == 2:
+            return 1
+        return None
+
     def state_dict(self):
         # El csv nomes conte les poscicions de les peces, no el tipus de peça.
         # Les dues primeres columnes son la torra i les dues segones el rei
@@ -192,7 +229,7 @@ if __name__ == "__main__":
     # TA[0][4] = 12
 
     TA[7][0] = 2
-    TA[7][4] = 6
+    TA[6][4] = 6
     TA[0][4] = 12
 
     # initialise board
@@ -237,6 +274,9 @@ if __name__ == "__main__":
     state_dict = aichess.state_dict()
     print("Allstates: ", len(state_dict))
     print("Index of state [[6, 0, 2], [6, 5, 6]]: ", state_dict[repr([[6, 0, 2], [6, 5, 6]])])
+    start, to, piece = aichess.getMoveFromStates(aichess.getCurrentState(), [[7,0,2], [7,5,6]])
+    print("Action to make: ", start, to, piece)
+    print("Index of action: ", aichess.getIndexFromAction(start, to, piece))
     print("#Move sequence...  ", aichess.pathToTarget)
     print("#Visited sequence...  ", aichess.listVisitedStates)
     print("#Current State...  ", aichess.chess.board.currentStateW)
