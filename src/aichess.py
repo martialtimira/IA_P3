@@ -233,6 +233,128 @@ class Aichess():
             if diffY == 0 and diffX == -7:
                 return 35
         return None
+    def getActionFromIndex(self, index):
+        diffY = None
+        diffX = None
+        piece = None
+        if index <= 7:  ##King actions
+            piece = 6
+            if index == 0:
+                diffY = 1
+                diffX = 0
+            if index == 1:
+                diffY = 1
+                diffX = 1
+            if index == 2:
+                diffY = 1
+                diffX = -1
+            if index == 3:
+                diffY = 0
+                diffX = 1
+            if index == 4:
+                diffY = 0
+                diffX = -1
+            if index == 5:
+                diffY = -1
+                diffX = 0
+            if index == 6:
+                diffY = -1
+                diffX = 1
+            if index == 7:
+                diffY = -1
+                diffX = -1
+
+        if index > 7:  ##Tower Actions
+            ##Tower up actions (up 1 to up7)
+            piece = 2
+            if index == 8:
+                diffY = 1
+                diffX = 0
+            if index == 9:
+                diffY = 2
+                diffX = 0
+            if index == 10:
+                diffY = 3
+                diffX = 0
+            if index == 11:
+                diffY = 4
+                diffX = 0
+            if index == 12:
+                diffY = 5
+                diffX = 0
+            if index == 13:
+                diffY = 6
+                diffX = 0
+            if index == 14:
+                diffY = 7
+                diffX = 0
+            ##Tower down actions (down 1 to down7)
+            if index == 15:
+                diffY = -1
+                diffX = 0
+            if index == 16:
+                diffY = -2
+                diffX = 0
+            if index == 17:
+                diffY = -3
+                diffX = 0
+            if index == 18:
+                diffY = -4
+                diffX = 0
+            if index == 19:
+                diffY = -5
+                diffX = 0
+            if index == 20:
+                diffY = -6
+                diffX = 0
+            if index == 21:
+                diffY = -7
+                diffX = 0
+            ##Tower Left actions (left 1 to left7)
+            if index == 22:
+                diffY = 0
+                diffX = 1
+            if index == 23:
+                diffY = 0
+                diffX = 2
+            if index == 24:
+                diffY = 0
+                diffX = 3
+            if index == 25:
+                diffY = 0
+                diffX = 4
+            if index == 26:
+                diffY = 0
+                diffX = 5
+            if index == 27:
+                diffY = 0
+                diffX = 6
+            if index == 28:
+                diffY = 0
+                diffX = 7
+            ##Tower Left actions (left 1 to left7)
+            if index == 29:
+                diffY = 0
+                diffX = -1
+            if index == 30:
+                diffY = 0
+                diffX = -2
+            if index == 31:
+                diffY = 0
+                diffX = -3
+            if index == 32:
+                diffY = 0
+                diffX = -4
+            if index == 33:
+                diffY = 0
+                diffX = -5
+            if index == 34:
+                diffY = 0
+                diffX = -6
+            if index == 35:
+                diffY = 0
+                diffX = -7
+        return diffY, diffX, piece
 
 def init_state_dict():
     # El csv nomes conte les poscicions de les peces, no el tipus de peça.
