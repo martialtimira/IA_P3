@@ -6,6 +6,7 @@ Created on Thu Sep  8 11:22:03 2022
 @author: ignasi
 """
 import copy
+import csv
 
 import chess
 import numpy as np
@@ -51,10 +52,12 @@ class Aichess():
         self.checkMate = False
         self.stateDict = {}
         self.actionDict = {}
+        self.qTable = []
+        self.rewardTable = []
 
     def getCurrentState(self):
 
-        return self.myCurrentStateW
+        return self.chess.boardSim.currentStateW
 
     def getListNextStatesW(self, myState):
 
@@ -112,6 +115,125 @@ class Aichess():
 
             return self.checkMate
 
+    def getMoveFromStates(self, currentState, nextState):
+        """
+        Returns the "start" and "to" points of a move from its 2 states
+        Args:
+            currentState: Current State of the board
+            nextState: State of the Board after the move
+
+        Returns: Starting coordinates, To coordinates, piece ID
+
+        """
+        start = None
+        to = None
+        piece = None
+
+        for element in currentState:                    #compare each element of both states, to find the one in the current state that isn't
+            if element not in nextState:                #on the next state, and define that one as the starting point, also define which piece it is
+                start = (element[0], element[1])
+                piece = element[2]
+        for element in nextState:                       #repeat, but instead find the one in nextState that isn't in currentState, and
+            if element not in currentState:             #define that one as the "to" point.
+                to = (element[0], element[1])
+
+
+        return start, to, piece
+
+    def getIndexFromAction(self, start, to, piece):
+        '''
+        Returns an index for the action recieved
+        Args:
+            start:
+            to:
+            piece:
+
+        Returns:
+
+        '''
+        diffY = start[0] - to[0]
+        diffX = start[1] - to[1]
+        if piece == 6:          ##King actions
+            if diffY == 1 and diffX == 0:
+                return 0
+            if diffY == 1 and diffX == 1:
+                return 1
+            if diffY == 1 and diffX == -1:
+                return 2
+            if diffY == 0 and diffX == 1:
+                return 3
+            if diffY == 0 and diffX == -1:
+                return 4
+            if diffY == -1 and diffX == 0:
+                return 5
+            if diffY == -1 and diffX == 1:
+                return 6
+            if diffY == -1 and diffX == -1:
+                return 7
+
+        if piece == 2:          ##Tower Actions
+            ##Tower up actions (up 1 to up7)
+            if diffY == 1 and diffX == 0:
+                return 8
+            if diffY == 2 and diffX == 0:
+                return 9
+            if diffY == 3 and diffX == 0:
+                return 10
+            if diffY == 4 and diffX == 0:
+                return 11
+            if diffY == 5 and diffX == 0:
+                return 12
+            if diffY == 6 and diffX == 0:
+                return 13
+            if diffY == 7 and diffX == 0:
+                return 14
+            ##Tower down actions (down 1 to down7)
+            if diffY == -1 and diffX == 0:
+                return 15
+            if diffY == -2 and diffX == 0:
+                return 16
+            if diffY == -3 and diffX == 0:
+                return 17
+            if diffY == -4 and diffX == 0:
+                return 18
+            if diffY == -5 and diffX == 0:
+                return 19
+            if diffY == -6 and diffX == 0:
+                return 20
+            if diffY == -7 and diffX == 0:
+                return 21
+            ##Tower Left actions (left 1 to left7)
+            if diffY == 0 and diffX == 1:
+                return 22
+            if diffY == 0 and diffX == 2:
+                return 23
+            if diffY == 0 and diffX == 3:
+                return 24
+            if diffY == 0 and diffX == 4:
+                return 25
+            if diffY == 0 and diffX == 5:
+                return 26
+            if diffY == 0 and diffX == 6:
+                return 27
+            if diffY == 0 and diffX == 7:
+                return 28
+            ##Tower Left actions (left 1 to left7)
+            if diffY == 0 and diffX == -1:
+                return 29
+            if diffY == 0 and diffX == -2:
+                return 30
+            if diffY == 0 and diffX == -3:
+                return 31
+            if diffY == 0 and diffX == -4:
+                return 32
+            if diffY == 0 and diffX == -5:
+                return 33
+            if diffY == 0 and diffX == -6:
+                return 34
+            if diffY == 0 and diffX == -7:
+                return 35
+        return None
+
     def state_dict(self):
         # El csv nomes conte les poscicions de les peces, no el tipus de peça.
         # Les dues primeres columnes son la torra i les dues segones el rei
@@ -128,8 +250,39 @@ class Aichess():
 
             for s in range(len(states)):
                 estats.update({repr([[states[s][0], states[s][1], 2], [states[s][2], states[s][3], 6]]): s})
-
+        self.stateDict = estats
         return estats
+
+    def init_tables(self):
+        self.qTable = np.zeros((len(self.stateDict), 36))
+        self.rewardTable = np.full((len(self.stateDict), 36), -1)
+
+        #Set reward of all the tower actions that end in CheckMate to 100
+        rook_check_mate_columns = [0, 1, 2, 6, 7]
+        for column in rook_check_mate_columns:
+            for row in range(7, 0, -1):
+                currentState = [[row, column, 2], [2, 4, 6]]
+                checkMateState = [[0, column, 2], [2, 4, 6]]
+                start, to, piece = aichess.getMoveFromStates(currentState, checkMateState)
+                actionIndex = aichess.getIndexFromAction(start, to, piece)
+                stateIndex = aichess.stateDict[repr(currentState)]
+                self.rewardTable[stateIndex][actionIndex] = 100
+
+            currentState_1 = [[0, column, 2], [2, 3, 6]]
+            currentState_2 = [[0, column, 2], [2, 5, 6]]
+            currentState_3 = [[0, column, 2], [3, 3, 6]]
+            currentState_4 = [[0, column, 2], [3, 4, 6]]
+            currentState_5 = [[0, column, 2], [3, 5, 6]]
+            checkMateStateK = [[0, column, 2], [2, 4, 6]]
+
+            king_states = [currentState_1, currentState_2, currentState_3, currentState_4, currentState_5]
+
+            for state in king_states:
+                start, to, piece = aichess.getMoveFromStates(state, checkMateStateK)
+                actionIndex = aichess.getIndexFromAction(start, to, piece)
+                stateIndex = aichess.stateDict[repr(state)]
+                self.rewardTable[stateIndex][actionIndex] = 100
+
 
 
 def translate(s):
@@ -165,8 +318,9 @@ if __name__ == "__main__":
     # # black pieces
     # TA[0][4] = 12
 
-    TA[7][0] = 2
-    TA[7][4] = 6
+    TA[0][0] = 2
+    #TA[7][4] = 6
+    TA[3][3] = 6
     TA[0][4] = 12
 
     # initialise board
@@ -208,7 +362,22 @@ if __name__ == "__main__":
     #     aichess.chess.moveSim(start, to)
 
     # aichess.chess.boardSim.print_board()
+    state_dict = aichess.state_dict()
+    aichess.init_tables()
+    print("Allstates: ", len(state_dict))
+    start, to, piece = aichess.getMoveFromStates(aichess.getCurrentState(), [[0, 0,2], [2,4,6]])
+    actionIndex = aichess.getIndexFromAction(start, to, piece)
+    currentState = aichess.getCurrentState()
+    currentState.sort(key=lambda x: x[2])
+    print("CS: ", currentState)
+    stateIndex = aichess.stateDict[repr(currentState)]
+    print("AIndex: ", actionIndex, "SIndex: ", stateIndex)
+    print("Reward for those indexes: ", aichess.rewardTable[stateIndex][actionIndex])
+    aichess.chess.moveSim(start, to)
+    aichess.chess.boardSim.print_board()
+    print("Action to make: ", start, to, piece)
+    print("Index of action: ", aichess.getIndexFromAction(start, to, piece))
     print("#Move sequence...  ", aichess.pathToTarget)
     print("#Visited sequence...  ", aichess.listVisitedStates)
     print("#Current State...  ", aichess.chess.board.currentStateW)
-    print("IsCheckMate: ", aichess.isCheckMate(aichess.chess.board.currentStateW))
+    print("IsCheckMate: ", aichess.isCheckMate(aichess.chess.boardSim.currentStateW))
