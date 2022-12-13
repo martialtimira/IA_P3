@@ -166,7 +166,7 @@ def check_updown(board, start, to):
 
         for i in range(smaller_y + 1, bigger_y):
             if board.board[start[0]][i] != None:
-                print(blocked_path)
+                #print(blocked_path)
                 ##print("At: " + str(start[0], i))
                 return False
         return True
@@ -176,7 +176,7 @@ def check_updown(board, start, to):
 
         for i in range(smaller_x + 1, bigger_x):
             if board.board[i][start[1]] != None:
-                print(blocked_path)
+                #print(blocked_path)
                 return False
         return True
 
@@ -239,10 +239,11 @@ class Rook(Piece):
         self.name = "R"
         self.first_move = first_move 
 
-    def is_valid_move(self, board, start, to):
+    def is_valid_move(self, board, start, to, verbose = True):
         if start[0] == to[0] or start[1] == to[1]:
             return check_updown(board, start, to)
-        print(incorrect_path)
+        if verbose:
+            print(incorrect_path)
         return False
 
 class Knight(Piece):
@@ -437,7 +438,7 @@ class King(Piece):
             return True
 
 
-    def is_valid_move(self, board, start, to):
+    def is_valid_move(self, board, start, to, verbose = True):
         if self.first_move and abs(start[1] - to[1]) == 2 and start[0] - to[0] == 0:
             return self.can_castle(board, start, to, to[1] - start[1] > 0)
 
@@ -445,8 +446,8 @@ class King(Piece):
             if start[1] - to[1] == 0 or abs(start[1] - to[1]) == 1:
                 self.first_move = False
                 return True
-
-        print(incorrect_path)
+        if verbose:
+            print(incorrect_path)
         return False
 
 

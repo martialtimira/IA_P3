@@ -419,6 +419,59 @@ def init_tables(stateDict):
 
     return qTable, rewardTable
 
+def qLearn(epochs, board, q_table, reward_table, state_dictionary):
+    epsilon = 0.1
+    alpha = 0.1
+    gamma = 0.6
+
+    for i in range(1, epochs+1):
+        aichess = Aichess(board, True)
+
+        aichess.qTable = q_table
+        aichess.rewardTable = reward_table
+        aichess.stateDict = state_dictionary
+        current_state = aichess.getCurrentState()
+        current_state.sort(key=lambda x: x[2])
+
+        while not aichess.isCheckMate(aichess.chess.boardSim.currentStateW):
+            current_state = aichess.getCurrentState()
+            current_state.sort(key=lambda x: x[2])
+            currentState_index = state_dict[repr(current_state)]
+            if random.uniform(0, 1) < epsilon:
+                actionIndex = random.randint(0, 35)
+            else:
+                actionIndex = np.argmax(qTable[currentState_index])
+            difY, difX, pieceToMove = aichess.getActionFromIndex(actionIndex)
+            nextState = []
+            for element in current_state:
+                if element[2] == pieceToMove:
+                    newElement = [element[0] + difY, element[1] + difX, pieceToMove]
+                    nextState.append(newElement)
+                else:
+                    nextState.append(element)
+
+            start, to, piece = aichess.getMoveFromStates(current_state, nextState)
+            piece_there = aichess.chess.boardSim.board[start[0]][start[1]]
+            if not (to[0] > 7 or to[0] < 0 or to[1] > 7 or to[1] < 0) and to != (0, 4):
+                if piece_there != None:
+                    if piece_there.is_valid_move(aichess.chess.boardSim, start, to):
+                        aichess.chess.moveSim(start, to, verbose=False)
+            nextState = aichess.getCurrentState()
+            nextState.sort(key=lambda x: x[2])
+            reward = rewardTable[currentState_index][actionIndex]
+
+            old_value = qTable[currentState_index][actionIndex]
+
+            next_state_index = state_dict[repr(nextState)]
+            next_max = np.max(qTable[next_state_index])
+
+            new_value = (1 - alpha) * old_value + alpha * (reward + gamma * next_max)
+            qTable[currentState_index][actionIndex] = new_value
+
+        if i % 100 == 0:
+            print("Episode: ", i)
+    return 0
+
 
 
 def translate(s):
@@ -472,7 +525,6 @@ if __name__ == "__main__":
     # it uses board to get them... careful 
     aichess.getListNextStatesW(currentState)
     #   aichess.getListNextStatesW([[7,4,2],[7,4,6]])
-    print("list next states ", aichess.listNextStates)
 
     # starting from current state find the end state (check mate) - recursive function
     # aichess.chess.boardSim.listVisitedStates = []
@@ -505,14 +557,16 @@ if __name__ == "__main__":
     aichess.qTable = qTable
     aichess.rewardTable = rewardTable
     aichess.stateDict = state_dict
-    print("Allstates: ", len(state_dict))
     currentState = aichess.getCurrentState()
     currentState.sort(key=lambda x: x[2])
-    print("CS: ", currentState)
     epsilon = 0.1
     alpha = 0.1
     gamma = 0.6
-    print()
+    moves_made = 0
+
+    qLearn(5000, TA, qTable, rewardTable, state_dict)
+
+    #Once QLearn is done exploring, we exploit the best option
     while not aichess.isCheckMate(aichess.chess.boardSim.currentStateW):
         currentState = aichess.getCurrentState()
         currentState.sort(key=lambda x: x[2])
@@ -534,8 +588,9 @@ if __name__ == "__main__":
         piece_there = aichess.chess.boardSim.board[start[0]][start[1]]
         if not (to[0] > 7 or to[0] < 0 or to[1] > 7 or to[1] < 0) and to != (0, 4):
             if piece_there != None:
-                if piece_there.is_valid_move(aichess.chess.boardSim, start, to):
-                    aichess.chess.moveSim(start, to)
+                if piece_there.is_valid_move(aichess.chess.boardSim, start, to, False):
+                    aichess.chess.moveSim(start, to, verbose=False)
+                    moves_made += 1
         nextState = aichess.getCurrentState()
         nextState.sort(key=lambda x: x[2])
         reward = rewardTable[currentState_index][actionIndex]
@@ -547,9 +602,10 @@ if __name__ == "__main__":
 
         new_value = (1 - alpha) * old_value + alpha * (reward + gamma * next_max)
         qTable[currentState_index][actionIndex] = new_value
-        aichess.chess.boardSim.print_board()
+        #aichess.chess.boardSim.print_board()
 
     aichess.chess.boardSim.print_board()
+    print("CheckMate in ", moves_made, " moves")
 
     print(qTable)
     print("#Move sequence...  ", aichess.pathToTarget)
