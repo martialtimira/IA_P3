@@ -153,7 +153,7 @@ class Aichess():
         diffX = start[1] - to[1]
         print("Difference in the X axis: ", diffX)
         print("Difference on the Y axis: ", diffY)
-        if piece == 6:
+        if piece == 6:          ##King actions
             if diffY == 1 and diffX == 0:
                 return 0
             if diffY == 1 and diffX == 1:
@@ -170,9 +170,68 @@ class Aichess():
                 return 6
             if diffY == -1 and diffX == -1:
                 return 7
-            return 100
-        if piece == 2:
-            return 1
+
+        if piece == 2:          ##Tower Actions
+            ##Tower up actions (up 1 to up7)
+            if diffY == 1 and diffX == 0:
+                return 8
+            if diffY == 2 and diffX == 0:
+                return 9
+            if diffY == 3 and diffX == 0:
+                return 10
+            if diffY == 4 and diffX == 0:
+                return 11
+            if diffY == 5 and diffX == 0:
+                return 12
+            if diffY == 6 and diffX == 0:
+                return 13
+            if diffY == 7 and diffX == 0:
+                return 14
+            ##Tower down actions (down 1 to down7)
+            if diffY == -1 and diffX == 0:
+                return 15
+            if diffY == -2 and diffX == 0:
+                return 16
+            if diffY == -3 and diffX == 0:
+                return 17
+            if diffY == -4 and diffX == 0:
+                return 18
+            if diffY == -5 and diffX == 0:
+                return 19
+            if diffY == -6 and diffX == 0:
+                return 20
+            if diffY == -7 and diffX == 0:
+                return 21
+            ##Tower Left actions (left 1 to left7)
+            if diffY == 0 and diffX == 1:
+                return 22
+            if diffY == 0 and diffX == 2:
+                return 23
+            if diffY == 0 and diffX == 3:
+                return 24
+            if diffY == 0 and diffX == 4:
+                return 25
+            if diffY == 0 and diffX == 5:
+                return 26
+            if diffY == 0 and diffX == 6:
+                return 27
+            if diffY == 0 and diffX == 7:
+                return 28
+            ##Tower Left actions (left 1 to left7)
+            if diffY == 0 and diffX == -1:
+                return 29
+            if diffY == 0 and diffX == -2:
+                return 30
+            if diffY == 0 and diffX == -3:
+                return 31
+            if diffY == 0 and diffX == -4:
+                return 32
+            if diffY == 0 and diffX == -5:
+                return 33
+            if diffY == 0 and diffX == -6:
+                return 34
+            if diffY == 0 and diffX == -7:
+                return 35
         return None
 
     def state_dict(self):
@@ -229,7 +288,7 @@ if __name__ == "__main__":
     # TA[0][4] = 12
 
     TA[7][0] = 2
-    TA[6][4] = 6
+    TA[7][4] = 6
     TA[0][4] = 12
 
     # initialise board
