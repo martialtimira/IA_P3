@@ -268,7 +268,20 @@ class Aichess():
                 stateIndex = aichess.stateDict[repr(currentState)]
                 self.rewardTable[stateIndex][actionIndex] = 100
 
-        #Set reward of all king actions that end in CheckMate to 100
+            currentState_1 = [[0, column, 2], [2, 3, 6]]
+            currentState_2 = [[0, column, 2], [2, 5, 6]]
+            currentState_3 = [[0, column, 2], [3, 3, 6]]
+            currentState_4 = [[0, column, 2], [3, 4, 6]]
+            currentState_5 = [[0, column, 2], [3, 5, 6]]
+            checkMateStateK = [[0, column, 2], [2, 4, 6]]
+
+            king_states = [currentState_1, currentState_2, currentState_3, currentState_4, currentState_5]
+
+            for state in king_states:
+                start, to, piece = aichess.getMoveFromStates(state, checkMateStateK)
+                actionIndex = aichess.getIndexFromAction(start, to, piece)
+                stateIndex = aichess.stateDict[repr(state)]
+                self.rewardTable[stateIndex][actionIndex] = 100
 
 
 
@@ -305,9 +318,9 @@ if __name__ == "__main__":
     # # black pieces
     # TA[0][4] = 12
 
-    TA[6][6] = 2
+    TA[0][0] = 2
     #TA[7][4] = 6
-    TA[2][4] = 6
+    TA[3][3] = 6
     TA[0][4] = 12
 
     # initialise board
@@ -352,8 +365,7 @@ if __name__ == "__main__":
     state_dict = aichess.state_dict()
     aichess.init_tables()
     print("Allstates: ", len(state_dict))
-    print("Index of state [[6, 0, 2], [6, 5, 6]]: ", state_dict[repr([[6, 0, 2], [6, 5, 6]])])
-    start, to, piece = aichess.getMoveFromStates(aichess.getCurrentState(), [[0, 6,2], [2,4,6]])
+    start, to, piece = aichess.getMoveFromStates(aichess.getCurrentState(), [[0, 0,2], [2,4,6]])
     actionIndex = aichess.getIndexFromAction(start, to, piece)
     currentState = aichess.getCurrentState()
     currentState.sort(key=lambda x: x[2])
