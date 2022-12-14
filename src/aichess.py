@@ -386,9 +386,31 @@ def init_state_dict():
             estats.update({repr([[states[s][0], states[s][1], 2], [states[s][2], states[s][3], 6]]): s})
     return estats
 
-def init_tables(stateDict):
-    qTable = np.zeros((len(stateDict), 36))
-    rewardTable = np.full((len(stateDict), 36), -1)
+def arraytocsv(arr, s):
+    file = open(s+".csv", mode='w+', newline='')
+    with file:
+        write = csv.writer(file)
+        write.writerows(arr)
+
+def csvtoarray(s):
+    with open(s+".csv", mode='r') as file:
+        f = csv.reader(file)
+
+        arr = []
+
+        for line in f:
+            arr.append([float(x) for x in line])
+
+    return np.array(arr)
+
+def init_tables(stateDict, c):
+    rewardTable = np.full((len(stateDict), 36), -10)
+    if c:
+        qTable = csvtoarray("qTable")
+
+    if not c or not np.any(qTable):
+        qTable = np.zeros((len(stateDict), 36))
+
 
     #Set reward of all the tower actions that end in CheckMate to 100
     rook_check_mate_columns = [0, 1, 2, 6, 7]
@@ -416,13 +438,12 @@ def init_tables(stateDict):
             actionIndex = aichess.getIndexFromAction(start, to, piece)
             stateIndex = stateDict[repr(state)]
             rewardTable[stateIndex][actionIndex] = 100
-
     return qTable, rewardTable
 
 def qLearn(epochs, board, q_table, reward_table, state_dictionary):
-    epsilon = 0.1
+    epsilon = 0.25
     alpha = 0.1
-    gamma = 0.6
+    gamma = 0.85
 
     for i in range(1, epochs+1):
         aichess = Aichess(board, True)
@@ -551,7 +572,8 @@ if __name__ == "__main__":
     # aichess.chess.boardSim.print_board()
     ##Initialize state dictionary, qTable and Reward Table, and assign them to aichess
     state_dict = init_state_dict()
-    qTable, rewardTable =  init_tables(state_dict)
+    c = False
+    qTable, rewardTable = init_tables(state_dict, c)
 
     ##From here we can reinitialize Aichess and keep the data of QTable and rewardTable
     aichess.qTable = qTable
@@ -559,12 +581,14 @@ if __name__ == "__main__":
     aichess.stateDict = state_dict
     currentState = aichess.getCurrentState()
     currentState.sort(key=lambda x: x[2])
-    epsilon = 0.1
+    epsilon = 0.25
     alpha = 0.1
-    gamma = 0.6
+    gamma = 0.85
     moves_made = 0
 
-    qLearn(5000, TA, qTable, rewardTable, state_dict)
+    qLearn(10000, TA, qTable, rewardTable, state_dict)
+    if c:
+        arraytocsv(qTable, "qTable")
 
     #Once QLearn is done exploring, we exploit the best option
     while not aichess.isCheckMate(aichess.chess.boardSim.currentStateW):
@@ -591,6 +615,7 @@ if __name__ == "__main__":
                 if piece_there.is_valid_move(aichess.chess.boardSim, start, to, False):
                     aichess.chess.moveSim(start, to, verbose=False)
                     moves_made += 1
+                    aichess.chess.boardSim.print_board()
         nextState = aichess.getCurrentState()
         nextState.sort(key=lambda x: x[2])
         reward = rewardTable[currentState_index][actionIndex]
@@ -606,7 +631,6 @@ if __name__ == "__main__":
 
     aichess.chess.boardSim.print_board()
     print("CheckMate in ", moves_made, " moves")
-
     print(qTable)
     print("#Move sequence...  ", aichess.pathToTarget)
     print("#Visited sequence...  ", aichess.listVisitedStates)
