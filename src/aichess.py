@@ -421,7 +421,7 @@ def init_tables(stateDict, c):
             start, to, piece = aichess.getMoveFromStates(currentState, checkMateState)
             actionIndex = aichess.getIndexFromAction(start, to, piece)
             stateIndex = stateDict[repr(currentState)]
-            rewardTable[stateIndex][actionIndex] = 100
+            rewardTable[stateIndex][actionIndex] = 1000
 
         #set reward of all the king actions that lead to CheckMate to 100
         currentState_1 = [[0, column, 2], [2, 3, 6]]
@@ -437,13 +437,18 @@ def init_tables(stateDict, c):
             start, to, piece = aichess.getMoveFromStates(state, checkMateStateK)
             actionIndex = aichess.getIndexFromAction(start, to, piece)
             stateIndex = stateDict[repr(state)]
-            rewardTable[stateIndex][actionIndex] = 100
+            rewardTable[stateIndex][actionIndex] = 1000
     return qTable, rewardTable
 
 def qLearn(epochs, board, q_table, reward_table, state_dictionary):
-    epsilon = 0.25
+    """epsilon = 0.25
     alpha = 0.1
-    gamma = 0.85
+    gamma = 0.85"""
+    init_lr = 1.0
+    min_lr = 0.003
+    epsilon = 0.25
+    gamma = 0.8
+    rewards_per_epiode = list()
 
     for i in range(1, epochs+1):
         aichess = Aichess(board, True)
@@ -453,6 +458,9 @@ def qLearn(epochs, board, q_table, reward_table, state_dictionary):
         aichess.stateDict = state_dictionary
         current_state = aichess.getCurrentState()
         current_state.sort(key=lambda x: x[2])
+        epoc_reward = 0
+        #alpha = max(min_lr, init_lr * (0.85 ** (i//epochs)))
+        alpha = 1 - (0.997 * i) // epochs
 
         while not aichess.isCheckMate(aichess.chess.boardSim.currentStateW):
             current_state = aichess.getCurrentState()
@@ -480,6 +488,7 @@ def qLearn(epochs, board, q_table, reward_table, state_dictionary):
             nextState = aichess.getCurrentState()
             nextState.sort(key=lambda x: x[2])
             reward = rewardTable[currentState_index][actionIndex]
+            epoc_reward += reward
 
             old_value = qTable[currentState_index][actionIndex]
 
@@ -488,11 +497,12 @@ def qLearn(epochs, board, q_table, reward_table, state_dictionary):
 
             new_value = (1 - alpha) * old_value + alpha * (reward + gamma * next_max)
             qTable[currentState_index][actionIndex] = new_value
-
+        rewards_per_epiode.append(epoc_reward)
         if i % 100 == 0:
-            print("Episode: ", i)
+            x = np.mean(rewards_per_epiode)
+            print("Episode: ", i, " mean rewards: ", x)
+            rewards_per_epiode.clear()
     return 0
-
 
 
 def translate(s):
@@ -514,6 +524,7 @@ def translate(s):
     except:
         print(s + "is not in the format '[number][letter]'")
         return None
+
 
 
 if __name__ == "__main__":
@@ -581,12 +592,9 @@ if __name__ == "__main__":
     aichess.stateDict = state_dict
     currentState = aichess.getCurrentState()
     currentState.sort(key=lambda x: x[2])
-    epsilon = 0.25
-    alpha = 0.1
-    gamma = 0.85
     moves_made = 0
 
-    qLearn(10000, TA, qTable, rewardTable, state_dict)
+    qLearn(50000, TA, qTable, rewardTable, state_dict)
     if c:
         arraytocsv(qTable, "qTable")
 
@@ -595,7 +603,7 @@ if __name__ == "__main__":
         currentState = aichess.getCurrentState()
         currentState.sort(key=lambda x: x[2])
         currentState_index = state_dict[repr(currentState)]
-        if random.uniform(0, 1) < epsilon:
+        if random.uniform(0, 1) < 0.025:
             actionIndex = random.randint(0, 35)
         else:
             actionIndex = np.argmax(qTable[currentState_index])
@@ -615,7 +623,6 @@ if __name__ == "__main__":
                 if piece_there.is_valid_move(aichess.chess.boardSim, start, to, False):
                     aichess.chess.moveSim(start, to, verbose=False)
                     moves_made += 1
-                    aichess.chess.boardSim.print_board()
         nextState = aichess.getCurrentState()
         nextState.sort(key=lambda x: x[2])
         reward = rewardTable[currentState_index][actionIndex]
@@ -625,8 +632,6 @@ if __name__ == "__main__":
         next_state_index = state_dict[repr(nextState)]
         next_max = np.max(qTable[next_state_index])
 
-        new_value = (1 - alpha) * old_value + alpha * (reward + gamma * next_max)
-        qTable[currentState_index][actionIndex] = new_value
         #aichess.chess.boardSim.print_board()
 
     aichess.chess.boardSim.print_board()
